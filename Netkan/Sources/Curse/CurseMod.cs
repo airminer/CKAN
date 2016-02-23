@@ -2,6 +2,8 @@ using System;
 using System.Linq;
 using Newtonsoft.Json;
 using HtmlAgilityPack;
+using System.Net;
+using CKAN.NetKAN.Services;
 
 namespace CKAN.NetKAN.Sources.Curse
 {
@@ -60,7 +62,7 @@ namespace CKAN.NetKAN.Sources.Curse
             mod.versions[0].id = 0;
             mod.versions[0].KSP_version = new KSPVersion("any");
             mod.versions[0].changelog = "nil";
-            mod.versions[0].download_path = new Uri(latestUrl.ToString() + "/download");
+            mod.versions[0].download_path = CurseApi.ResolveRedirect(latestUrl.ToString() + "/download");
             mod.versions[0].friendly_version = new Version("0");
             mod.website = new Uri("http://foo.bar");
             mod.source_code = new Uri("http://foo.bar");

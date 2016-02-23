@@ -4,6 +4,7 @@ using CKAN.NetKAN.Services;
 using log4net;
 using Newtonsoft.Json;
 using HtmlAgilityPack;
+using System.Net;
 
 namespace CKAN.NetKAN.Sources.Curse
 {
@@ -77,6 +78,26 @@ namespace CKAN.NetKAN.Sources.Curse
             return urlFixed;
         }
 
+        public static Uri ResolveRedirect(string url)
+        {
+            Uri redirUrl = new Uri(url);
+            HttpWebRequest request = (HttpWebRequest) WebRequest.Create(redirUrl);
+            request.AllowAutoRedirect = false;
+            request.UserAgent = Net.UserAgentString;
+            HttpWebResponse response = (HttpWebResponse) request.GetResponse();
+            response.Close();
+            while (response.Headers["Location"] != null)
+            {
+                redirUrl = new Uri(redirUrl, response.Headers["Location"]);
+                request = (HttpWebRequest)WebRequest.Create(redirUrl);
+                request.AllowAutoRedirect = false;
+                request.UserAgent = Net.UserAgentString;
+                response = (HttpWebResponse)request.GetResponse();
+                response.Close();
+            }
+            return redirUrl;
+        }
+
         private string Call(string path)
         {
             // TODO: There's got to be a better way than using regexps.
@@ -86,7 +107,7 @@ namespace CKAN.NetKAN.Sources.Curse
             // Remove leading and trailing slashes.
             path = Regex.Replace(path, "^/+|/+$", "");
 
-            var url = CurseBase + path + FilesBase;
+            var url = Regex.Replace(ResolveRedirect(CurseBase + path).ToString(), "\\?.*$", "") + FilesBase;
 
             Log.DebugFormat("Calling {0}", url);
 
